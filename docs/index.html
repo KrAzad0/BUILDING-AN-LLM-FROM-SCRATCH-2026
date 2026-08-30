@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Build a GPT-style language model from scratch: tokenizer, attention, Transformer blocks, training, and generation." />
+  <title>LLM From Scratch 2026</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#top">LLM<span>//2026</span></a>
+    <nav>
+      <a href="#architecture">Architecture</a>
+      <a href="#playground">Playground</a>
+      <a href="#train">Train</a>
+      <a class="button small" href="https://github.com/KrAzad0/BUILDING-AN-LLM-FROM-SCRATCH-2026">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <p class="eyebrow">FROM BYTES TO A TRANSFORMER</p>
+      <h1>Build an LLM<br /><em>from scratch.</em></h1>
+      <p class="lede">A complete, readable GPT-style implementation in PyTorch. Learn the mathematics, inspect the code, train a small model, save a checkpoint, and generate text.</p>
+      <div class="actions">
+        <a class="button" href="#train">Start building</a>
+        <a class="ghost" href="https://github.com/KrAzad0/BUILDING-AN-LLM-FROM-SCRATCH-2026/blob/main/src/minigpt.py">Read minigpt.py ↗</a>
+      </div>
+      <div class="stats">
+        <article><strong>256</strong><span>byte tokens</span></article>
+        <article><strong>4×</strong><span>Transformer blocks</span></article>
+        <article><strong>128</strong><span>default context</span></article>
+        <article><strong>100%</strong><span>inspectable code</span></article>
+      </div>
+    </section>
+
+    <section id="architecture" class="section wrap">
+      <div class="section-head">
+        <p class="eyebrow">THE PIPELINE</p>
+        <h2>One next-token prediction at a time.</h2>
+        <p>Each stage transforms information while preserving the causal rule: the future stays hidden.</p>
+      </div>
+      <div class="pipeline" aria-label="LLM architecture pipeline">
+        <button data-stage="tokens" class="stage active">01 <b>Tokens</b><span>UTF-8 bytes</span></button>
+        <button data-stage="embed" class="stage">02 <b>Embeddings</b><span>token + position</span></button>
+        <button data-stage="attention" class="stage">03 <b>Attention</b><span>masked Q · Kᵀ</span></button>
+        <button data-stage="blocks" class="stage">04 <b>Blocks</b><span>attention + MLP</span></button>
+        <button data-stage="logits" class="stage">05 <b>Logits</b><span>next-token scores</span></button>
+      </div>
+      <article id="stage-detail" class="detail"></article>
+    </section>
+
+    <section class="equation-band">
+      <div class="wrap equation-grid">
+        <div>
+          <p class="eyebrow">CORE EQUATION</p>
+          <h2>Scaled dot-product attention</h2>
+        </div>
+        <code>Attention(Q,K,V) = softmax(QKᵀ / √d + mask)V</code>
+      </div>
+    </section>
+
+    <section id="playground" class="section wrap">
+      <div class="section-head">
+        <p class="eyebrow">BROWSER LAB</p>
+        <h2>See tokenization happen.</h2>
+        <p>This uses the same byte-token idea as the Python tokenizer. Type text and inspect the integer IDs sent to the model.</p>
+      </div>
+      <div class="lab-grid">
+        <div class="panel">
+          <label for="token-input">Input text</label>
+          <textarea id="token-input" rows="7">Quantum mechanics meets machine learning.</textarea>
+          <div class="panel-row"><span>Byte tokens</span><strong id="token-count">0</strong></div>
+        </div>
+        <div class="panel terminal">
+          <div class="terminal-top"><i></i><i></i><i></i><span>tokenizer.py</span></div>
+          <pre id="token-output"></pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap">
+      <div class="section-head">
+        <p class="eyebrow">MODEL CALCULATOR</p>
+        <h2>Scale it and watch the parameter count.</h2>
+      </div>
+      <div class="calculator">
+        <label>Layers <input id="layers" type="range" min="1" max="16" value="4" /><b id="layers-v">4</b></label>
+        <label>Heads <input id="heads" type="range" min="1" max="16" value="4" /><b id="heads-v">4</b></label>
+        <label>Embedding <input id="embd" type="range" min="64" max="1024" step="64" value="256" /><b id="embd-v">256</b></label>
+        <div class="param-card"><span>Approximate parameters</span><strong id="param-count">—</strong><small>educational estimate; exact count is printed by train.py</small></div>
+      </div>
+    </section>
+
+    <section id="train" class="section wrap">
+      <div class="section-head">
+        <p class="eyebrow">RUN IT</p>
+        <h2>Train your first model.</h2>
+      </div>
+      <div class="steps">
+        <article><span>1</span><h3>Clone + install</h3><pre><code>git clone https://github.com/KrAzad0/BUILDING-AN-LLM-FROM-SCRATCH-2026.git
+cd BUILDING-AN-LLM-FROM-SCRATCH-2026
+pip install -r requirements.txt</code></pre></article>
+        <article><span>2</span><h3>Train</h3><pre><code>python train.py --data data/sample.txt --steps 1000</code></pre></article>
+        <article><span>3</span><h3>Generate</h3><pre><code>python generate.py --checkpoint checkpoints/minigpt.pt \
+  --prompt "The future of AI"</code></pre></article>
+      </div>
+    </section>
+
+    <section class="section wrap roadmap">
+      <p class="eyebrow">NEXT LEVEL</p>
+      <h2>Baseline → modern LLM stack</h2>
+      <div class="chips"><span>BPE</span><span>RoPE</span><span>RMSNorm</span><span>SwiGLU</span><span>GQA</span><span>KV Cache</span><span>Mixed Precision</span><span>Instruction Tuning</span></div>
+    </section>
+  </main>
+
+  <footer class="wrap">
+    <p>BUILDING AN LLM FROM SCRATCH — 2026</p>
+    <p>Educational project by Kumar Azad · MIT License</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
