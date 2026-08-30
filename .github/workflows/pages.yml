@@ -34,6 +34,7 @@ jobs:
         shell: bash
         run: |
           test -f docs/index.html
+          test -f docs/chat/index.html
           test -f docs/chat.html
           test -f docs/chat.js
           test -f docs/chat.css
