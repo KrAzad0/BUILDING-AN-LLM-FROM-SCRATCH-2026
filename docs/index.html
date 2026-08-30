@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Build a GPT-style language model from scratch: tokenizer, attention, Transformer blocks, training, and generation." />
+  <meta name="description" content="Build a GPT-style language model from scratch: tokenizer, attention, Transformer blocks, training, generation, and an interactive chat prototype." />
   <title>LLM From Scratch 2026</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -14,6 +14,7 @@
       <a href="#architecture">Architecture</a>
       <a href="#playground">Playground</a>
       <a href="#train">Train</a>
+      <a href="chat.html">Chat Prototype</a>
       <a class="button small" href="https://github.com/KrAzad0/BUILDING-AN-LLM-FROM-SCRATCH-2026">GitHub ↗</a>
     </nav>
   </header>
@@ -22,16 +23,17 @@
     <section class="hero wrap">
       <p class="eyebrow">FROM BYTES TO A TRANSFORMER</p>
       <h1>Build an LLM<br /><em>from scratch.</em></h1>
-      <p class="lede">A complete, readable GPT-style implementation in PyTorch. Learn the mathematics, inspect the code, train a small model, save a checkpoint, and generate text.</p>
+      <p class="lede">A complete, readable GPT-style implementation in PyTorch. Learn the mathematics, inspect the code, train a small model, save a checkpoint, generate text, and explore a working browser chat prototype.</p>
       <div class="actions">
-        <a class="button" href="#train">Start building</a>
+        <a class="button" href="chat.html">Open Chat Prototype</a>
+        <a class="ghost" href="#train">Train the model</a>
         <a class="ghost" href="https://github.com/KrAzad0/BUILDING-AN-LLM-FROM-SCRATCH-2026/blob/main/src/minigpt.py">Read minigpt.py ↗</a>
       </div>
       <div class="stats">
         <article><strong>256</strong><span>byte tokens</span></article>
         <article><strong>4×</strong><span>Transformer blocks</span></article>
         <article><strong>128</strong><span>default context</span></article>
-        <article><strong>100%</strong><span>inspectable code</span></article>
+        <article><strong>LIVE</strong><span>browser chat prototype</span></article>
       </div>
     </section>
 
@@ -111,7 +113,7 @@ pip install -r requirements.txt</code></pre></article>
     <section class="section wrap roadmap">
       <p class="eyebrow">NEXT LEVEL</p>
       <h2>Baseline → modern LLM stack</h2>
-      <div class="chips"><span>BPE</span><span>RoPE</span><span>RMSNorm</span><span>SwiGLU</span><span>GQA</span><span>KV Cache</span><span>Mixed Precision</span><span>Instruction Tuning</span></div>
+      <div class="chips"><span>BPE</span><span>RoPE</span><span>RMSNorm</span><span>SwiGLU</span><span>GQA</span><span>KV Cache</span><span>Mixed Precision</span><span>Instruction Tuning</span><span>ONNX/WebGPU Chat</span></div>
     </section>
   </main>
 
