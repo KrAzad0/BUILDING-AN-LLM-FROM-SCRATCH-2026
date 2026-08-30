@@ -1,6 +1,6 @@
 # BUILDING AN LLM FROM SCRATCH — 2026
 
-A compact, educational GPT-style language model built from first principles with PyTorch.
+A compact, educational GPT-style language model built from first principles with PyTorch, including an interactive chat prototype.
 
 This repository covers the complete pipeline:
 
@@ -13,7 +13,8 @@ This repository covers the complete pipeline:
 7. next-token cross-entropy training
 8. autoregressive text generation
 9. checkpoint save/load
-10. tests and a GitHub Pages learning site
+10. browser chat prototype + real local checkpoint chat
+11. tests and a GitHub Pages learning site
 
 > The code is intentionally small enough to study, modify, and train on a laptop/GPU. It is an educational small language model, not a production-scale ChatGPT replacement.
 
@@ -64,6 +65,62 @@ Run tests:
 pytest -q
 ```
 
+## Chat prototype
+
+The project now includes a ChatGPT-style interface at:
+
+```text
+docs/chat.html
+```
+
+It has two operating modes.
+
+### 1. GitHub Pages / browser mode
+
+Open `chat.html` through the GitHub Pages site. The interface works entirely in the browser with:
+
+- conversation history stored in `localStorage`
+- streaming/typing animation
+- byte-token counter
+- temperature and top-k controls
+- suggested prompts
+- responsive desktop/mobile chat UI
+- local educational fallback response engine
+
+### 2. Real PyTorch checkpoint mode
+
+After training a checkpoint, launch:
+
+```bash
+python chat_server.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000/
+```
+
+The same UI automatically detects the local API and switches from the browser fallback to the actual PyTorch `minigpt.pt` checkpoint.
+
+You can select another checkpoint or device:
+
+```bash
+python chat_server.py \
+  --checkpoint checkpoints/minigpt.pt \
+  --device auto \
+  --port 8000
+```
+
+The local API exposes:
+
+```text
+GET  /api/status
+POST /api/chat
+```
+
+GitHub Pages cannot execute Python, so real checkpoint inference requires the local server for now. A future ONNX/WebGPU export can make genuine model inference run directly inside the browser.
+
 ## Train on your own corpus
 
 Put any UTF-8 `.txt` file in `data/` and run:
@@ -99,10 +156,14 @@ python train.py \
 ├── docs/
 │   ├── index.html
 │   ├── style.css
-│   └── app.js
+│   ├── app.js
+│   ├── chat.html
+│   ├── chat.css
+│   └── chat.js
 ├── .github/workflows/pages.yml
 ├── train.py
 ├── generate.py
+├── chat_server.py
 ├── requirements.txt
 └── README.md
 ```
@@ -120,6 +181,8 @@ PyTorch supplies tensors and autograd, while the language-model architecture is 
 - language-modeling loss
 - temperature + top-k sampling
 - checkpointing and generation loop
+- chat-style local inference server
+- browser chat interface with local fallback mode
 
 ## The mathematics
 
@@ -159,7 +222,11 @@ A static educational website lives in `docs/`, with an Actions workflow that dep
 
 **https://krazad0.github.io/BUILDING-AN-LLM-FROM-SCRATCH-2026/**
 
-GitHub Pages is static hosting, so actual PyTorch training runs locally, in Codespaces, Colab, or another compute environment. The website provides an interactive architecture visualizer and learning guide.
+The chat prototype will be available at:
+
+**https://krazad0.github.io/BUILDING-AN-LLM-FROM-SCRATCH-2026/chat.html**
+
+GitHub Pages is static hosting, so actual PyTorch training and checkpoint inference run locally, in Codespaces, Colab, or another compute environment.
 
 ## Suggested upgrades
 
