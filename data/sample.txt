@@ -1,0 +1,43 @@
+BUILDING A LANGUAGE MODEL FROM SCRATCH
+
+A language model learns a probability distribution over sequences of tokens. Given a context, it estimates what token is likely to come next. Repeating this simple operation creates autoregressive text generation.
+
+The first step is tokenization. In this educational project every UTF-8 byte is represented by an integer from zero to two hundred and fifty-five. Byte tokenization is not as efficient as a modern learned subword vocabulary, but it is transparent, reversible, and able to represent any text.
+
+The second step is representation. A token embedding maps each discrete token to a learned vector. A positional embedding tells the model where each token occurs in the sequence. Adding these vectors gives the initial hidden state used by the Transformer.
+
+Self-attention lets every position compare its query with the keys of earlier positions and mix their values. The dot products are divided by the square root of the head dimension before softmax. A causal mask prevents a token from seeing tokens in its future. This converts ordinary self-attention into an autoregressive mechanism.
+
+Multiple attention heads allow the model to learn several kinds of relationships at the same time. One head might focus on nearby punctuation, another on a subject mentioned earlier, and another on longer-range structure. The outputs of all heads are concatenated and projected back into the model dimension.
+
+A Transformer block combines masked multi-head self-attention with a feed-forward network. Layer normalization stabilizes the activations. Residual connections let information and gradients flow through deep stacks of blocks. The feed-forward network expands the hidden dimension, applies a nonlinear activation, and projects back down.
+
+The final hidden state is mapped to vocabulary logits. During training, cross entropy compares those logits with the true next token at every position. Gradient descent adjusts millions of parameters so that correct next tokens become more probable.
+
+Training data matters. A model cannot learn reliable language, physics, mathematics, programming, or reasoning patterns from a tiny sample file. This text exists only to make the repository runnable. Serious experiments should use a much larger, legally usable corpus that matches the intended domain.
+
+Generation begins with a prompt. The model evaluates the current context and produces a probability distribution for the next token. Temperature changes how sharp that distribution is. Top-k sampling can remove very unlikely candidates. One token is sampled, appended to the context, and the process repeats.
+
+A small model is ideal for learning. We can inspect every tensor shape, understand every equation, and train experiments without a cluster. Scaling up does not change the central objective: predict the next token from previous tokens. What changes are the tokenizer, architecture details, dataset scale, optimization strategy, compute budget, and evaluation methods.
+
+Modern language models often replace learned absolute position embeddings with rotary position embeddings. They may replace LayerNorm with RMSNorm and the standard GELU feed-forward network with gated activations such as SwiGLU. Some use grouped-query attention to reduce inference memory and a key-value cache to avoid recomputing attention for all previous tokens during generation.
+
+Optimization also becomes more sophisticated at scale. Large runs use mixed precision, learning-rate warmup, cosine decay, gradient accumulation, distributed data parallelism, checkpoint sharding, careful initialization, and extensive monitoring. None of those techniques changes the mathematical heart of the model, but they make large-scale training practical.
+
+Evaluation must go beyond training loss. A useful model should be tested on held-out data, domain benchmarks, factuality, robustness, safety, latency, memory use, and qualitative generations. Validation loss helps detect overfitting, while task-specific tests show whether the model has learned useful behavior.
+
+Physics offers a useful analogy. The hidden state of a Transformer is not a quantum wavefunction, but both theories emphasize state representations and transformations. In attention, information is redistributed by learned similarity scores. In quantum mechanics, amplitudes evolve under linear operators and measurement rules. Analogies can inspire intuition, but mathematical objects should not be identified without proof.
+
+Mathematics is essential to understanding language models. Linear algebra explains embeddings and matrix multiplication. Probability explains likelihood and sampling. Calculus explains gradients. Optimization explains training. Information theory explains entropy and cross entropy. Numerical analysis explains stability, precision, and computational cost.
+
+Programming turns these equations into an experiment. The tensor containing token IDs has shape batch by time. Embeddings add a feature dimension. Attention reshapes that feature dimension into multiple heads. Matrix multiplication creates a time-by-time score matrix. The causal mask makes the upper triangle inaccessible. Softmax converts scores to weights. Weighted values return information to each token position.
+
+The purpose of this repository is to make that entire chain visible. Read the tokenizer. Follow one batch through the model. Print tensor shapes. Train for a few hundred steps. Generate text. Change the number of layers and heads. Break the causal mask and observe what happens. Replace the corpus. Compare losses. Every controlled experiment builds intuition.
+
+A language model from scratch is therefore not one mysterious algorithm. It is a sequence of understandable components: data, tokens, embeddings, attention, nonlinear transformations, probability distributions, a loss function, backpropagation, optimization, checkpointing, and autoregressive sampling.
+
+Repeat these ideas while experimenting. Prediction is the objective. Attention is the communication mechanism. The Transformer block is the computational unit. Gradient descent is the learning process. Sampling is the generation process. Data supplies the patterns that the model can learn.
+
+Once the baseline is reliable, extend it carefully. Add a subword tokenizer and compare sequence lengths. Add rotary embeddings and test longer contexts. Add key-value caching and measure generation speed. Add mixed precision and measure memory. Add instruction data and examine behavior. Each extension should have a hypothesis, an implementation, and an evaluation.
+
+The scientific method applies to machine learning: define the question, build the smallest experiment that can answer it, measure results, and change one important variable at a time.
