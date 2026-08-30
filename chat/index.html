@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Interactive browser chat prototype for the BUILDING AN LLM FROM SCRATCH 2026 project." />
+  <title>MiniGPT Chat — LLM From Scratch 2026</title>
+  <link rel="stylesheet" href="../docs/chat.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div>
+        <a class="brand" href="../">LLM<span>//2026</span></a>
+        <button class="new-chat" id="new-chat">＋ New chat</button>
+      </div>
+      <div class="side-section">
+        <p class="side-label">Try a prompt</p>
+        <button class="suggestion" data-prompt="Explain causal self-attention simply.">Explain attention</button>
+        <button class="suggestion" data-prompt="How do I train the MiniGPT model in this repository?">How to train</button>
+        <button class="suggestion" data-prompt="What is a tokenizer and why does this project use byte tokens?">Byte tokenizer</button>
+        <button class="suggestion" data-prompt="Show me the architecture of this GPT model.">Model architecture</button>
+        <button class="suggestion" data-prompt="How could I upgrade this project toward a modern Llama-style model?">Modern upgrades</button>
+      </div>
+      <div class="side-section settings">
+        <p class="side-label">Generation controls</p>
+        <label><span>Temperature <b id="temperature-value">0.8</b></span><input id="temperature" type="range" min="0.2" max="1.5" step="0.1" value="0.8" /></label>
+        <label><span>Top-k <b id="topk-value">40</b></span><input id="topk" type="range" min="5" max="100" step="5" value="40" /></label>
+      </div>
+      <div class="sidebar-footer">
+        <a href="../">← Learning site</a>
+        <a href="https://github.com/KrAzad0/BUILDING-AN-LLM-FROM-SCRATCH-2026">GitHub ↗</a>
+      </div>
+    </aside>
+    <main class="chat-main">
+      <header class="topbar">
+        <button class="menu" id="menu" aria-label="Toggle sidebar">☰</button>
+        <div><h1>MiniGPT Chat</h1><p><span class="status-dot"></span> browser prototype · local demo engine</p></div>
+        <div class="model-pill">GPT-Scratch-256</div>
+      </header>
+      <section class="conversation" id="conversation" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <div class="logo-orb">G</div>
+          <h2>Talk to the model prototype.</h2>
+          <p>This interface runs entirely in your browser. It demonstrates the product experience around the trainable PyTorch model in this repository.</p>
+          <div class="welcome-grid">
+            <button data-prompt="Explain the equation Attention(Q,K,V) = softmax(QKᵀ/√d + mask)V."><b>Understand the math</b><span>Walk through attention step by step</span></button>
+            <button data-prompt="Give me the exact commands to train and then generate text."><b>Run the model</b><span>Training and inference commands</span></button>
+            <button data-prompt="Why is the causal mask necessary in a GPT model?"><b>Explore causality</b><span>Why future tokens stay hidden</span></button>
+            <button data-prompt="What should version 2 of this repository implement?"><b>Plan v2</b><span>Roadmap toward a modern LLM</span></button>
+          </div>
+        </div>
+      </section>
+      <section class="composer-wrap">
+        <div class="composer">
+          <textarea id="prompt" rows="1" placeholder="Message MiniGPT…" aria-label="Message MiniGPT"></textarea>
+          <div class="composer-bottom"><div class="token-meta"><span id="token-count">0</span> byte tokens</div><button id="send" class="send" aria-label="Send message">↑</button></div>
+        </div>
+        <p class="disclaimer">Prototype UI. Responses are produced by a lightweight browser demo engine; train.py contains the actual GPT implementation.</p>
+      </section>
+    </main>
+  </div>
+  <script src="../docs/chat.js"></script>
+</body>
+</html>
