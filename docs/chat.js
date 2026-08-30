@@ -13,9 +13,11 @@ const topkValue = $("#topk-value");
 const tokenCount = $("#token-count");
 const sidebar = $("#sidebar");
 const menuButton = $("#menu");
+const engineStatus = document.querySelector(".topbar p");
 
 let isGenerating = false;
 let messages = loadHistory();
+let liveCheckpoint = false;
 
 const knowledge = {
   attention: {
@@ -38,8 +40,8 @@ const knowledge = {
     title: "Training the repository model",
     body: [
       "Install dependencies, train on a UTF-8 text corpus, then load the saved checkpoint for generation.",
-      "```bash\npip install -r requirements.txt\npython train.py --data data/sample.txt --steps 1000\npython generate.py --checkpoint checkpoints/minigpt.pt --prompt \"Quantum mechanics\"\n```",
-      "During training, the model minimizes next-token cross-entropy and saves the best validation checkpoint."
+      "```bash\npip install -r requirements.txt\npython train.py --data data/sample.txt --steps 1000\npython generate.py --checkpoint checkpoints/minigpt.pt --prompt \"Quantum mechanics\"\npython chat_server.py\n```",
+      "During training, the model minimizes next-token cross-entropy and saves the best validation checkpoint. The local chat server then loads that checkpoint and exposes it to this interface."
     ]
   },
   architecture: {
@@ -55,7 +57,7 @@ const knowledge = {
     body: [
       "A useful next step is to evolve the educational GPT into a modern decoder stack.",
       "I would prioritize: BPE tokenizer → RoPE → RMSNorm → SwiGLU → grouped-query attention → KV cache → mixed precision → larger training corpus → instruction tuning.",
-      "After that, export a small checkpoint to ONNX or WebGPU so the chat page can run real model inference in the browser instead of the current demo engine."
+      "After that, export a small checkpoint to ONNX or WebGPU so the GitHub Pages version can perform genuine browser inference without a Python server."
     ]
   },
   mask: {
@@ -87,6 +89,35 @@ function saveHistory() {
   localStorage.setItem("minigpt-chat-history", JSON.stringify(messages.slice(-30)));
 }
 
+function setEngineStatus(text, live = false) {
+  if (!engineStatus) return;
+  engineStatus.innerHTML = `<span class="status-dot"></span> ${text}`;
+  const dot = engineStatus.querySelector(".status-dot");
+  if (dot && !live) {
+    dot.style.background = "#9eb8ff";
+    dot.style.boxShadow = "0 0 12px #9eb8ff";
+  }
+}
+
+async function detectEngine() {
+  if (location.hostname.endsWith("github.io") || location.protocol === "file:") {
+    setEngineStatus("browser prototype · local demo engine", false);
+    return;
+  }
+  try {
+    const response = await fetch("/api/status", { cache: "no-store" });
+    const data = await response.json();
+    liveCheckpoint = Boolean(data.ready);
+    if (liveCheckpoint) {
+      setEngineStatus(`PyTorch checkpoint · ${data.device}`, true);
+    } else {
+      setEngineStatus("browser fallback · train a checkpoint to enable real inference", false);
+    }
+  } catch {
+    setEngineStatus("browser prototype · local demo engine", false);
+  }
+}
+
 function escapeHtml(text) {
   return text
     .replaceAll("&", "&amp;")
@@ -104,23 +135,24 @@ function formatMessage(text) {
     .join("");
 }
 
-function addMessage(role, text, { streaming = false } = {}) {
-  welcome?.remove();
+function addMessage(role, text, { streaming = false, engine = null } = {}) {
+  document.querySelector("#welcome")?.remove();
   const article = document.createElement("article");
   article.className = `message ${role}`;
+  const assistantMeta = engine === "pytorch-checkpoint" ? "MiniGPT · real PyTorch checkpoint" : "MiniGPT browser prototype";
   article.innerHTML = `
     <div class="avatar">${role === "user" ? "U" : "G"}</div>
     <div class="bubble">
       <div class="content ${streaming ? "cursor" : ""}">${formatMessage(text)}</div>
-      <div class="message-meta">${role === "user" ? encoder.encode(text).length + " byte tokens" : "MiniGPT browser prototype"}</div>
+      <div class="message-meta">${role === "user" ? encoder.encode(text).length + " byte tokens" : assistantMeta}</div>
     </div>`;
   conversation.appendChild(article);
   conversation.scrollTop = conversation.scrollHeight;
-  return article.querySelector(".content");
+  return { content: article.querySelector(".content"), meta: article.querySelector(".message-meta") };
 }
 
 function addThinking() {
-  welcome?.remove();
+  document.querySelector("#welcome")?.remove();
   const article = document.createElement("article");
   article.className = "message assistant";
   article.innerHTML = `<div class="avatar">G</div><div class="bubble"><div class="thinking"><i></i><i></i><i></i></div></div>`;
@@ -146,7 +178,7 @@ function classify(input) {
   return null;
 }
 
-function makeResponse(input) {
+function makeBrowserResponse(input) {
   const lower = input.toLowerCase().trim();
   if (/^(hi|hello|hey|namaste)\b/.test(lower)) {
     return "Hello. I’m the browser prototype for the LLM-from-scratch project. Ask me about the tokenizer, Transformer architecture, causal attention, training commands, or how to improve the model.";
@@ -160,21 +192,49 @@ function makeResponse(input) {
 
   const bytes = encoder.encode(input).length;
   const k = Number(topk.value);
-  return `${choose(fallbackOpeners)} your prompt first becomes ${bytes} byte tokens, then those IDs are embedded and passed through causal Transformer blocks.\n\nFor a real learned answer to “${input.slice(0, 90)}${input.length > 90 ? "…" : ""}”, this repository needs a trained checkpoint containing enough examples related to that topic. The current GitHub Pages chat is intentionally a lightweight local prototype because static hosting cannot directly run the PyTorch checkpoint.\n\nWith temperature ${Number(temperature.value).toFixed(1)} and top-k ${k}, the production path would sample each next token from the model logits. A good next step is exporting the trained model to ONNX/WebGPU so this same interface can perform genuine browser inference.`;
+  return `${choose(fallbackOpeners)} your prompt first becomes ${bytes} byte tokens, then those IDs are embedded and passed through causal Transformer blocks.\n\nFor a real learned answer to “${input.slice(0, 90)}${input.length > 90 ? "…" : ""}”, train the repository model and run \`python chat_server.py\`. The local server will connect this same interface to the saved PyTorch checkpoint.\n\nOn GitHub Pages, static hosting cannot execute Python, so this fallback engine keeps the prototype interactive. Temperature ${Number(temperature.value).toFixed(1)} and top-k ${k} mirror the sampling controls used by the actual model.`;
 }
 
-async function streamResponse(text) {
-  const target = addMessage("assistant", "", { streaming: true });
+async function requestCheckpointResponse() {
+  if (!liveCheckpoint) return null;
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages,
+        temperature: Number(temperature.value),
+        top_k: Number(topk.value),
+        max_new_tokens: 160
+      })
+    });
+    if (!response.ok) {
+      liveCheckpoint = false;
+      setEngineStatus("browser fallback · checkpoint API unavailable", false);
+      return null;
+    }
+    const data = await response.json();
+    return { text: data.reply, engine: data.engine || "pytorch-checkpoint" };
+  } catch {
+    liveCheckpoint = false;
+    setEngineStatus("browser fallback · checkpoint API unavailable", false);
+    return null;
+  }
+}
+
+async function streamResponse(text, engine = "browser-fallback") {
+  const target = addMessage("assistant", "", { streaming: true, engine });
   let visible = "";
   const chunks = text.split(/(\s+)/);
   for (const chunk of chunks) {
     if (!isGenerating) break;
     visible += chunk;
-    target.innerHTML = formatMessage(visible);
+    target.content.innerHTML = formatMessage(visible);
     conversation.scrollTop = conversation.scrollHeight;
     await new Promise(resolve => setTimeout(resolve, 12 + Math.random() * 24));
   }
-  target.classList.remove("cursor");
+  target.content.classList.remove("cursor");
+  if (engine === "pytorch-checkpoint") target.meta.textContent = "MiniGPT · real PyTorch checkpoint";
 }
 
 async function sendPrompt(text = promptBox.value) {
@@ -192,11 +252,13 @@ async function sendPrompt(text = promptBox.value) {
   saveHistory();
 
   const thinking = addThinking();
-  await new Promise(resolve => setTimeout(resolve, 280 + Math.random() * 320));
+  const modelReply = await requestCheckpointResponse();
+  if (!modelReply) await new Promise(resolve => setTimeout(resolve, 280 + Math.random() * 320));
   thinking.remove();
 
-  const response = makeResponse(clean);
-  await streamResponse(response);
+  const response = modelReply?.text || makeBrowserResponse(clean);
+  const engine = modelReply?.engine || "browser-fallback";
+  await streamResponse(response, engine);
   messages.push({ role: "assistant", content: response });
   saveHistory();
 
@@ -221,7 +283,7 @@ function resetChat() {
     <div class="welcome" id="welcome">
       <div class="logo-orb">G</div>
       <h2>Talk to the model prototype.</h2>
-      <p>This interface runs entirely in your browser. It demonstrates the product experience around the trainable PyTorch model in this repository.</p>
+      <p>This interface runs entirely in your browser on GitHub Pages, or connects to a real trained checkpoint when launched through chat_server.py.</p>
       <div class="welcome-grid">
         <button data-prompt="Explain the equation Attention(Q,K,V) = softmax(QKᵀ/√d + mask)V."><b>Understand the math</b><span>Walk through attention step by step</span></button>
         <button data-prompt="Give me the exact commands to train and then generate text."><b>Run the model</b><span>Training and inference commands</span></button>
@@ -261,8 +323,9 @@ topk.addEventListener("input", () => topkValue.textContent = topk.value);
 wirePromptButtons();
 updateTokenCount();
 resizePrompt();
+detectEngine();
 
 if (messages.length) {
-  welcome?.remove();
+  document.querySelector("#welcome")?.remove();
   messages.forEach(message => addMessage(message.role, message.content));
 }
